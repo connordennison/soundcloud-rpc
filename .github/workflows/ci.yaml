@@ -3,23 +3,87 @@ name: Generate release-artifacts
 
 # on events
 on:
-  release:
-    types: 
-        - created
+  push:
+    branches:
+      - main
 
 # workflow tasks
 jobs:
   generate:
+    permissions: # allow workflow to create releases
+      contents: write
+      issues: write
+      pull-requests: write
     name: Generate cross-platform builds
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v2
-      - name: Generate build files
-        uses: thatisuday/go-cross-build@v1
+      - name: Setup Go
+        uses: actions/setup-go@v2
         with:
-            platforms: 'linux/amd64, darwin/amd64, windows/amd64'
-            package: ''
-            name: 'soundcloud-rpc'
-            compress: 'false'
-            dest: 'dist'
+          go-version: 1.20.5
+      - name: Generate build files
+        run: |
+          mkdir -p ./bin
+          GOOS=linux GOARCH=amd64 go build -o ./bin/soundcloud-rpc-linux-amd64
+          GOOS=linux GOARCH=arm64 go build -o ./bin/soundcloud-rpc-linux-arm64
+          GOOS=windows GOARCH=amd64 go build -o ./bin/soundcloud-rpc-windows-amd64
+          GOOS=windows GOARCH=arm64 go build -o ./bin/soundcloud-rpc-windows-arm64
+          GOOS=darwin GOARCH=amd64 go build -o ./bin/soundcloud-rpc-darwin-amd64
+          GOOS=darwin GOARCH=arm64 go build -o ./bin/soundcloud-rpc-darwin-arm64
+      - name: Create release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.run_number }}
+          release_name: ${{ github.run_number }}
+      - name: Upload release assets
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./bin/soundcloud-rpc-linux-amd64
+          asset_name: soundcloud-rpc-linux-amd64
+      - name: Upload release assets
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./bin/soundcloud-rpc-linux-arm64
+          asset_name: soundcloud-rpc-linux-arm64
+      - name: Upload release assets
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./bin/soundcloud-rpc-windows-amd64
+          asset_name: soundcloud-rpc-windows-amd64
+      - name: Upload release assets
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./bin/soundcloud-rpc-windows-arm64
+          asset_name: soundcloud-rpc-windows-arm64
+      - name: Upload release assets
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./bin/soundcloud-rpc-darwin-amd64
+          asset_name: soundcloud-rpc-darwin-amd64
+      - name: Upload release assets
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./bin/soundcloud-rpc-darwin-arm64
+          asset_name: soundcloud-rpc-darwin-arm64
