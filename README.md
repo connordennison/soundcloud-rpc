@@ -11,3 +11,6 @@ SoundCloud shut down the old developer API. This makes use of the internal (v2) 
 
 ## Running
 Launch the executable in the same folder as your config.json.
+
+## Demo
+![](https://raw.githubusercontent.com/connordennison/soundcloud-rpc/main/screenshots/profile.png)
